@@ -1,0 +1,47 @@
+services:
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: bilhetica-postgres
+    environment:
+      POSTGRES_DB: bilhetica
+      POSTGRES_USER: bilhetica
+      POSTGRES_PASSWORD: bilhetica123
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bilhetica"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bilhetica-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build: .
+    container_name: bilhetica-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bilhetica
+      SPRING_DATASOURCE_USERNAME: bilhetica
+      SPRING_DATASOURCE_PASSWORD: bilhetica123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:
