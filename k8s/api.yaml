@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bilhetica-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bilhetica-api
+  template:
+    metadata:
+      labels:
+        app: bilhetica-api
+    spec:
+      containers:
+        - name: bilhetica-api
+          image: bilhetica-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/bilhetica
+            - name: SPRING_DATASOURCE_USERNAME
+              value: bilhetica
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: bilhetica123
+            - name: SPRING_DATA_REDIS_HOST
+              value: redis
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bilhetica-api
+spec:
+  type: NodePort
+  selector:
+    app: bilhetica-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
